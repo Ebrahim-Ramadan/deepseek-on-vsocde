@@ -1,101 +1,165 @@
 import * as vscode from 'vscode';
-import ollama from 'ollama';
+import { Ollama } from 'ollama';
+
+let panel: vscode.WebviewPanel | undefined = undefined;
+
+// Initialize Ollama client
+const ollama = new Ollama({
+    host: 'http://localhost:11434'  // default Ollama host
+});
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('DeepSeek extension is active!');
-	const disposable = vscode.commands.registerCommand('vsode-deepseek-daddy.chat', () => {
-		vscode.window.showInformationMessage('Hello World!');
-		const panel = vscode.window.createWebviewPanel(
-			'deepseek v0',
-			'vsode-deepseek-daddy',
-			vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				// retainContextWhenHidden: true,
-			}
-		);
-			panel.webview.html = getWebViewContent(); // hte amazing html
-			panel.webview.onDidReceiveMessage(async (message:any) => {
-				if (message.command === 'chat') {
-					const usePrompt = message.text;
-					let textResponse =''
+    console.log('DeepSeek extension is active!');
+    
+    let disposable = vscode.commands.registerCommand('vscode-deepseek-daddy.chatbaby', async () => {
+        try {
+            // Check if Ollama is running
+            await ollama.list();
+        } catch (error) {
+            vscode.window.showErrorMessage('Could not connect to Ollama. Please make sure it is running on your system.');
+            return;
+        }
 
-					try {
-						const streamResponse = await ollama.chat({
-							model:"deepseek-r1:latest",
-							messages: [
-								{
-									role: "user",
-									content: usePrompt,
-								},
-							],
-							stream: true as true, // Type assertion
-							// temperature: 0.5,
-							// max_tokens: 1000,
-						});
+        if (panel) {
+            panel.reveal(vscode.ViewColumn.One);
+            return;
+        }
 
-						for await (const chunk of streamResponse) {
-							textResponse += chunk.message.content;
-							panel.webview.postMessage({
-								command: 'response', 
-								text:textResponse
-							});
-						}
-						
-					} catch (error) {
-						console.log('ass error', error);
-						
-						panel.webview.postMessage({
-							command: 'response', 
-							text:error
-						});
-					}
-				}
-			});
-	});
+        panel = vscode.window.createWebviewPanel(
+            'deepseekChat',
+            'DeepSeek Chat',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true
+            }
+        );
 
-	context.subscriptions.push(disposable);
+        panel.webview.html = getWebViewContent();
 
+        panel.webview.onDidReceiveMessage(async (message: any) => {
+            try {
+                if (message.command === 'chat' && panel) {
+                    const response = await ollama.chat({
+                        model: 'deepseek-r1:latest',
+                        messages: [{ role: 'user', content: message.text }],
+                        stream: true
+                    });
+
+                    let textResponse = '';
+                    for await (const chunk of response) {
+                        if (chunk.message?.content) {
+                            textResponse += chunk.message.content;
+                            if (panel) {
+                                panel.webview.postMessage({
+                                    command: 'response',
+                                    text: textResponse
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                vscode.window.showErrorMessage(`Error: ${errorMessage}`);
+                if (panel) {
+                    panel.webview.postMessage({
+                        command: 'response',
+                        text: `Error: ${errorMessage}`
+                    });
+                }
+            }
+        });
+
+        panel.onDidDispose(() => {
+            panel = undefined;
+        }, null, context.subscriptions);
+    });
+
+    context.subscriptions.push(disposable);
 }
-
 
 function getWebViewContent() {
-	return `
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<style>
-		body { font-family: sans-serif; margin: 1rem; }
-		#prompt { width: 100%; box-sizing: border-box; }
-		#response { border: 1px solid #ccc; margin-top:1rem ,padding: 0.5rem; min-height: 0.5rem; }
-		</style>
-	</head>
-	<body>
-		<h2>Deepseek Daddy</h2>
-		<textarea id="prompt" rows="3" placeholder="Ask something..."></textarea><br />
-		<button id="askBtn">Ask</button>
-		<div id="response"></div>
-		<script>
-			const vscode = acquireVsCodeApi();
-			
-			document.getElementById('askBtn').addEventListener('click', () => {
-				const text = document.getElementById('prompt').value;
-				vscode.postMessage({
-					command: 'chat',
-					text
-				});
-			});
+    return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>DeepSeek Chat</title>
+            <style>
+                body {
+                    font-family: var(--vscode-font-family);
+                    padding: 20px;
+                    color: var(--vscode-editor-foreground);
+                    background-color: var(--vscode-editor-background);
+                }
+                #prompt {
+                    width: 100%;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                    background-color: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                    border: 1px solid var(--vscode-input-border);
+                }
+                #response {
+                    padding: 10px;
+                    margin-top: 10px;
+                    white-space: pre-wrap;
+                    background-color: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-input-border);
+                }
+                button {
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    padding: 8px 16px;
+                    cursor: pointer;
+                }
+                button:hover {
+                    background-color: var(--vscode-button-hoverBackground);
+                }
+            </style>
+        </head>
+        <body>
+            <textarea id="prompt" rows="4" placeholder="Ask something..."></textarea>
+            <button id="askBtn">Ask DeepSeek</button>
+            <div id="response"></div>
+            
+            <script>
+                const vscode = acquireVsCodeApi();
+                
+                document.getElementById('askBtn').addEventListener('click', sendMessage);
+                document.getElementById('prompt').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        sendMessage();
+                    }
+                });
 
-			window.addEventListener('message', (event) => {
-				const message = event.data;
-				if (message.command === 'response') {
-					document.getElementById('response').innerText = message.text;
-				}
-			});
-		</script>
-	</body>
-	</html>
-	`;
+                function sendMessage() {
+                    const text = document.getElementById('prompt').value.trim();
+                    if (!text) return;
+                    
+                    document.getElementById('response').innerText = 'Thinking...';
+                    vscode.postMessage({
+                        command: 'chat',
+                        text: text
+                    });
+                }
+
+                window.addEventListener('message', event => {
+                    const message = event.data;
+                    if (message.command === 'response') {
+                        document.getElementById('response').innerText = message.text;
+                    }
+                });
+            </script>
+        </body>
+        </html>
+    `;
 }
-export function deactivate() {}
+
+export function deactivate() {
+    if (panel) {
+        panel.dispose();
+    }
+}
