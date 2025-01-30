@@ -1,71 +1,107 @@
-# vsode-deepseek-daddy README
+# VSCode Deepseek Daddy Extension
 
-This is the README for your extension "vsode-deepseek-daddy". After writing up a brief description, we recommend including the following sections.
+A Visual Studio Code extension that integrates Deepseek's AI model directly into your editor, providing a convenient chat interface for AI assistance.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- 🤖 Direct integration with Deepseek AI model
+- 💬 Interactive chat interface within VSCode
+- ⚡ Real-time streaming responses
+- 🎨 Clean and simple UI
 
-For example if there is an image subfolder under your extension project workspace:
+## Prerequisites
 
-\!\[feature X\]\(images/feature-x.png\)
+Before installing this extension, make sure you have:
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+1. [Ollama](https://ollama.ai/) installed on your system
+2. The Deepseek model pulled in Ollama (`ollama pull deepseek-r1:latest`)
 
-## Requirements
+## Installation
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+1. Download the VSIX file from the releases page
+2. Install it in VSCode:
+   - Open VSCode
+   - Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+   - Type "Install from VSIX"
+   - Select the downloaded file
 
-## Extension Settings
+Alternatively, you can install it directly from the VSCode Marketplace (once published).
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Usage
 
-For example:
+1. Open the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Type "Deepseek Chat" or select "vsode-deepseek-daddy.chat"
+3. A chat interface will open in a new panel
+4. Type your question or prompt in the textarea
+5. Click "Ask" or press Enter to get a response
 
-This extension contributes the following settings:
+## Commands
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+- `vsode-deepseek-daddy.chat`: Opens the Deepseek chat interface
 
-## Known Issues
+## Configuration
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Currently, the extension uses default settings for the Deepseek model. Future versions may include customizable settings for:
+- Temperature
+- Max tokens
+- Model selection
+- Other Ollama parameters
 
-## Release Notes
+## Development
 
-Users appreciate release notes as you update your extension.
+To build and run this extension locally:
 
-### 1.0.0
+1. Clone the repository
+```bash
+git clone [repository-url]
+cd vscode-deepseek-daddy
+```
 
-Initial release of ...
+2. Install dependencies
+```bash
+npm install
+```
 
-### 1.0.1
+3. Open the project in VSCode
+```bash
+code .
+```
 
-Fixed issue #.
+4. Press F5 to start debugging
 
-### 1.1.0
+### Building
 
-Added features X, Y, and Z.
+To create a VSIX package:
+```bash
+npm run package
+```
 
----
+## Contributing
 
-## Following extension guidelines
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+## License
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+[MIT License](LICENSE)
 
-## Working with Markdown
+## Credits
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+This extension uses:
+- [Ollama](https://ollama.ai/) for model integration
+- [Deepseek](https://deepseek.ai/) AI model
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+## Troubleshooting
 
-## For more information
+Common issues:
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+1. **"Connection refused" error**
+   - Make sure Ollama is running on your system
+   - Verify that you have pulled the Deepseek model
 
-**Enjoy!**
+2. **No response from chat**
+   - Check your system's console for error messages
+   - Ensure you have a stable internet connection
+
+## Support
+
+For issues and feature requests, please open an issue on the GitHub repository.
